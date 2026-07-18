@@ -1,0 +1,263 @@
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "bible-plan-progress-v1";
+  var TOTAL = READINGS.length;
+
+  // ---------- storage ----------
+
+  function loadCompleted() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return new Set();
+      return new Set(JSON.parse(raw));
+    } catch (e) {
+      return new Set();
+    }
+  }
+
+  function saveCompleted(set) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(set)));
+  }
+
+  var completed = loadCompleted();
+
+  function isDone(index) {
+    return completed.has(index);
+  }
+
+  function setDone(index, done) {
+    if (done) completed.add(index);
+    else completed.delete(index);
+    saveCompleted(completed);
+  }
+
+  // ---------- derived data ----------
+
+  function nextUnreadIndex() {
+    for (var i = 0; i < TOTAL; i++) {
+      if (!completed.has(i)) return i;
+    }
+    return -1; // all done
+  }
+
+  function completedCount() {
+    return completed.size;
+  }
+
+  function weekProgress(weekNum) {
+    var items = READINGS.filter(function (r) { return r.w === weekNum; });
+    var done = items.filter(function (r) { return completed.has(r.index); }).length;
+    return { done: done, total: items.length };
+  }
+
+  // attach absolute index to each reading once (READINGS order is already sequential)
+  READINGS.forEach(function (r, i) { r.index = i; });
+
+  function bibleGatewayUrl(passages) {
+    var query = passages.join("; ");
+    return "https://www.biblegateway.com/passage/?search=" +
+      encodeURIComponent(query) + "&version=NIV";
+  }
+
+  // ---------- pace calculation ----------
+
+  function parseISODate(s) {
+    var parts = s.split("-").map(Number);
+    return new Date(parts[0], parts[1] - 1, parts[2]);
+  }
+
+  function expectedCountByNow() {
+    var start = parseISODate(PLAN_START_DATE);
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    start.setHours(0, 0, 0, 0);
+    if (today < start) return 0;
+    var count = 0;
+    var d = new Date(start);
+    while (d <= today) {
+      var day = d.getDay(); // 0 Sun .. 6 Sat
+      if (day >= 1 && day <= 5) count++;
+      d.setDate(d.getDate() + 1);
+    }
+    return Math.min(count, TOTAL);
+  }
+
+  // ---------- rendering: Today ----------
+
+  function renderToday() {
+    var card = document.getElementById("today-card");
+    var idx = nextUnreadIndex();
+
+    if (idx === -1) {
+      card.innerHTML =
+        '<div class="all-caught-up">' +
+        '<span class="big-emoji">&#127881;</span>' +
+        "<h2>You've finished the whole plan!</h2>" +
+        '<p class="muted">All 260 readings are marked complete. Visit Settings to reset if you\'d like to start again.</p>' +
+        "</div>";
+    } else {
+      var reading = READINGS[idx];
+      var url = bibleGatewayUrl(reading.p);
+      var html = "";
+      html += '<div class="eyebrow">Week ' + reading.w + " &middot; Reading " + reading.d + " of 5</div>";
+      html += "<h2>Today's Reading</h2>";
+      html += '<ul class="passage-list">';
+      reading.p.forEach(function (passage) {
+        html += '<li><a class="passage-link" target="_blank" rel="noopener" href="' +
+          bibleGatewayUrl([passage]) + '">' + passage + '<span class="chev">NIV &rsaquo;</span></a></li>';
+      });
+      html += "</ul>";
+      html += '<a class="btn btn-secondary" style="margin-bottom:10px;display:block;" target="_blank" rel="noopener" href="' + url + '">Open all passages together</a>';
+      html += '<button class="btn btn-primary" id="mark-done-btn">Mark as read</button>';
+      card.innerHTML = html;
+
+      document.getElementById("mark-done-btn").addEventListener("click", function () {
+        setDone(idx, true);
+        renderAll();
+      });
+    }
+  }
+
+  function renderPace() {
+    var card = document.getElementById("pace-card");
+    var expected = expectedCountByNow();
+    var actual = completedCount();
+    var diff = actual - expected;
+
+    var badgeClass = "ontrack";
+    var label = "Right on pace";
+    if (diff <= -3) {
+      badgeClass = "behind";
+      label = Math.abs(diff) + " reading" + (Math.abs(diff) === 1 ? "" : "s") + " behind";
+    } else if (diff >= 3) {
+      badgeClass = "ahead";
+      label = diff + " readings ahead";
+    }
+
+    card.innerHTML =
+      '<span class="pace-label">' + actual + " of " + TOTAL + " readings done</span>" +
+      '<span class="pace-badge ' + badgeClass + '">' + label + "</span>";
+  }
+
+  // ---------- rendering: Progress ----------
+
+  function renderProgress() {
+    var actual = completedCount();
+    var pct = Math.round((actual / TOTAL) * 100);
+
+    document.getElementById("progress-summary").innerHTML =
+      "<div><strong>" + actual + " / " + TOTAL + "</strong>readings completed</div>" +
+      "<div><strong>" + pct + "%</strong>of the plan</div>";
+
+    document.getElementById("progress-bar-fill").style.width = pct + "%";
+
+    var idx = nextUnreadIndex();
+    var currentWeek = idx === -1 ? 52 : READINGS[idx].w;
+
+    var grid = document.getElementById("progress-weeks");
+    var html = "";
+    for (var w = 1; w <= 52; w++) {
+      var wp = weekProgress(w);
+      var cls = "week-cell";
+      if (wp.done === wp.total) cls += " complete";
+      if (w === currentWeek) cls += " current";
+      html += '<div class="' + cls + '" title="Week ' + w + ": " + wp.done + "/" + wp.total + '">' + w + "</div>";
+    }
+    grid.innerHTML = html;
+  }
+
+  // ---------- rendering: Full list ----------
+
+  function renderList(scrollToCurrent) {
+    var container = document.getElementById("week-list");
+    var idx = nextUnreadIndex();
+    var currentWeek = idx === -1 ? 52 : READINGS[idx].w;
+
+    var byWeek = {};
+    READINGS.forEach(function (r) {
+      if (!byWeek[r.w]) byWeek[r.w] = [];
+      byWeek[r.w].push(r);
+    });
+
+    var html = "";
+    for (var w = 1; w <= 52; w++) {
+      var items = byWeek[w];
+      var wp = weekProgress(w);
+      var openAttr = (w === currentWeek) ? " open" : "";
+      html += '<details class="week-block" id="week-' + w + '"' + openAttr + '>';
+      html += "<summary>Week " + w + '<span class="week-progress">' + wp.done + "/" + wp.total + "</span></summary>";
+      items.forEach(function (r) {
+        var done = isDone(r.index);
+        var text = r.p.join("; ");
+        html += '<div class="day-row' + (done ? " done" : "") + '" data-index="' + r.index + '">';
+        html += '<span class="day-num">' + r.d + "</span>";
+        html += '<button class="day-check" data-index="' + r.index + '">&#10003;</button>';
+        html += '<a class="day-text" target="_blank" rel="noopener" href="' + bibleGatewayUrl(r.p) + '">' + text + "</a>";
+        html += "</div>";
+      });
+      html += "</details>";
+    }
+    container.innerHTML = html;
+
+    container.querySelectorAll(".day-check").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        var i = parseInt(btn.getAttribute("data-index"), 10);
+        setDone(i, !isDone(i));
+        renderAll();
+      });
+    });
+
+    if (scrollToCurrent) {
+      var el = document.getElementById("week-" + currentWeek);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  // ---------- settings ----------
+
+  document.getElementById("reset-progress").addEventListener("click", function () {
+    if (confirm("Reset all reading progress? This can't be undone.")) {
+      completed = new Set();
+      saveCompleted(completed);
+      renderAll();
+      switchTab("today");
+    }
+  });
+
+  document.getElementById("jump-to-current").addEventListener("click", function () {
+    renderList(true);
+  });
+
+  // ---------- tabs ----------
+
+  var tabs = document.querySelectorAll(".tab-btn");
+  function switchTab(target) {
+    tabs.forEach(function (btn) {
+      btn.classList.toggle("active", btn.getAttribute("data-target") === target);
+    });
+    document.querySelectorAll(".view").forEach(function (view) {
+      view.hidden = view.getAttribute("data-view") !== target;
+    });
+    if (target === "list") renderList(false);
+  }
+
+  tabs.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      switchTab(btn.getAttribute("data-target"));
+    });
+  });
+
+  // ---------- render everything ----------
+
+  function renderAll() {
+    renderToday();
+    renderPace();
+    renderProgress();
+    var listView = document.getElementById("view-list");
+    if (!listView.hidden) renderList(false);
+  }
+
+  renderAll();
+})();

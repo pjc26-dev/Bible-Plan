@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bible Reading Plan</title>
+<meta name="description" content="Five Day Bible Reading Program tracker — NIV">
+<meta name="theme-color" content="#3b3226">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bible Plan">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="app-header">
+  <h1>Bible Reading Plan</h1>
+  <p class="subtitle">Five Day Reading Program &middot; NIV</p>
+</header>
+
+<main id="view-today" class="view" data-view="today">
+  <section id="today-card" class="card today-card"></section>
+  <section id="pace-card" class="card pace-card"></section>
+</main>
+
+<main id="view-progress" class="view" data-view="progress" hidden>
+  <section class="card">
+    <h2>Overall Progress</h2>
+    <div id="progress-summary"></div>
+    <div class="progress-bar-track">
+      <div id="progress-bar-fill" class="progress-bar-fill"></div>
+    </div>
+    <div id="progress-weeks" class="week-grid"></div>
+  </section>
+</main>
+
+<main id="view-list" class="view" data-view="list" hidden>
+  <section class="card list-controls">
+    <button id="jump-to-current" class="btn btn-secondary">Jump to today</button>
+  </section>
+  <section id="week-list"></section>
+</main>
+
+<main id="view-settings" class="view" data-view="settings" hidden>
+  <section class="card">
+    <h2>Settings</h2>
+    <p class="muted">Your progress is stored only on this device (browser local storage). It won't sync between devices.</p>
+    <button id="reset-progress" class="btn btn-danger">Reset all progress</button>
+  </section>
+  <section class="card">
+    <h2>About</h2>
+    <p class="muted">Based on the Five Day Bible Reading Program (2026 Edition) from FiveDayBibleReading.com. Readings link out to Bible Gateway for the full NIV text. If you fall behind, the plan never skips ahead &mdash; it always shows your next unread reading so you can catch up at your own pace.</p>
+  </section>
+</main>
+
+<nav class="tab-bar">
+  <button class="tab-btn active" data-target="today">
+    <span class="tab-icon">&#128214;</span><span>Today</span>
+  </button>
+  <button class="tab-btn" data-target="progress">
+    <span class="tab-icon">&#128202;</span><span>Progress</span>
+  </button>
+  <button class="tab-btn" data-target="list">
+    <span class="tab-icon">&#128220;</span><span>Full List</span>
+  </button>
+  <button class="tab-btn" data-target="settings">
+    <span class="tab-icon">&#9881;&#65039;</span><span>Settings</span>
+  </button>
+</nav>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
