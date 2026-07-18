@@ -80,6 +80,25 @@
     return new Date(parts[0], parts[1] - 1, parts[2]);
   }
 
+  var MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  var DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  function dateForWeekDay(week, day) {
+    var start = parseISODate(PLAN_START_DATE);
+    var offset = (week - 1) * 7 + (day - 1);
+    var d = new Date(start);
+    d.setDate(d.getDate() + offset);
+    return d;
+  }
+
+  function formatShortDate(d) {
+    return MONTH_NAMES[d.getMonth()] + " " + d.getDate();
+  }
+
+  function formatLongDate(d) {
+    return DAY_NAMES[d.getDay()] + ", " + formatShortDate(d);
+  }
+
   function expectedCountByNow() {
     var start = parseISODate(PLAN_START_DATE);
     var today = new Date();
@@ -113,7 +132,8 @@
       var reading = READINGS[idx];
       var url = bibleGatewayUrl(reading.p);
       var html = "";
-      html += '<div class="eyebrow">Week ' + reading.w + " &middot; Reading " + reading.d + " of 5</div>";
+      html += '<div class="eyebrow">Week ' + reading.w + " &middot; Reading " + reading.d + " of 5 (" +
+        formatShortDate(dateForWeekDay(reading.w, reading.d)) + ")</div>";
       html += "<h2>Today's Reading</h2>";
       html += '<ul class="passage-list">';
       reading.p.forEach(function (passage) {
@@ -175,7 +195,8 @@
       var cls = "week-cell";
       if (wp.done === wp.total) cls += " complete";
       if (w === currentWeek) cls += " current";
-      html += '<div class="' + cls + '" title="Week ' + w + ": " + wp.done + "/" + wp.total + '">' + w + "</div>";
+      var range = formatShortDate(dateForWeekDay(w, 1)) + "–" + formatShortDate(dateForWeekDay(w, 5));
+      html += '<div class="' + cls + '" title="Week ' + w + ": " + wp.done + "/" + wp.total + " (" + range + ')">' + w + "</div>";
     }
     grid.innerHTML = html;
   }
@@ -198,15 +219,18 @@
       var items = byWeek[w];
       var wp = weekProgress(w);
       var openAttr = (w === currentWeek) ? " open" : "";
+      var range = formatShortDate(dateForWeekDay(w, 1)) + "–" + formatShortDate(dateForWeekDay(w, 5));
       html += '<details class="week-block" id="week-' + w + '"' + openAttr + '>';
-      html += "<summary>Week " + w + '<span class="week-progress">' + wp.done + "/" + wp.total + "</span></summary>";
+      html += "<summary><span>Week " + w + ' <span class="week-date">(' + range + ')</span></span><span class="week-progress">' + wp.done + "/" + wp.total + "</span></summary>";
       items.forEach(function (r) {
         var done = isDone(r.index);
         var text = r.p.join("; ");
+        var dateStr = formatShortDate(dateForWeekDay(r.w, r.d));
         html += '<div class="day-row' + (done ? " done" : "") + '" data-index="' + r.index + '">';
         html += '<span class="day-num">' + r.d + "</span>";
         html += '<button class="day-check" data-index="' + r.index + '">&#10003;</button>';
-        html += '<a class="day-text" target="_blank" rel="noopener" href="' + bibleGatewayUrl(r.p) + '">' + text + "</a>";
+        html += '<a class="day-text" target="_blank" rel="noopener" href="' + bibleGatewayUrl(r.p) + '">' + text +
+          ' <span class="day-date">(' + dateStr + ')</span></a>';
         html += "</div>";
       });
       html += "</details>";
@@ -278,15 +302,27 @@
 
   var weekSelect = document.getElementById("catchup-week");
   var daySelect = document.getElementById("catchup-day");
+  var catchupPreview = document.getElementById("catchup-date-preview");
   var weekOptionsHtml = "";
   for (var w = 1; w <= 52; w++) {
-    weekOptionsHtml += '<option value="' + w + '">' + w + "</option>";
+    var wRange = formatShortDate(dateForWeekDay(w, 1)) + "–" + formatShortDate(dateForWeekDay(w, 5));
+    weekOptionsHtml += '<option value="' + w + '">Week ' + w + " (" + wRange + ")</option>";
   }
   weekSelect.innerHTML = weekOptionsHtml;
 
   var planNow = currentPlanWeekAndDay();
   weekSelect.value = String(planNow.week);
   daySelect.value = String(planNow.day);
+
+  function updateCatchupPreview() {
+    var week = parseInt(weekSelect.value, 10);
+    var day = parseInt(daySelect.value, 10);
+    catchupPreview.textContent = "That's " + formatLongDate(dateForWeekDay(week, day)) + ".";
+  }
+
+  weekSelect.addEventListener("change", updateCatchupPreview);
+  daySelect.addEventListener("change", updateCatchupPreview);
+  updateCatchupPreview();
 
   document.getElementById("catchup-btn").addEventListener("click", function () {
     var week = parseInt(weekSelect.value, 10);
@@ -297,7 +333,7 @@
 
     if (!confirm(
       "Mark all " + count + " readings through Week " + week + ", Reading " + day +
-      " (" + reading.p.join("; ") + ") as read?"
+      " (" + formatLongDate(dateForWeekDay(week, day)) + " — " + reading.p.join("; ") + ") as read?"
     )) return;
 
     for (var i = 0; i <= targetIndex; i++) completed.add(i);

@@ -216,7 +216,11 @@ body {
 .catchup-row {
   display: flex;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
+}
+
+.catchup-preview {
+  margin: 0 0 14px;
 }
 
 .catchup-row label {
@@ -374,6 +378,12 @@ body {
   font-size: 0.85rem;
 }
 
+.week-block summary .week-date {
+  font-weight: 400;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
 .day-row {
   display: flex;
   align-items: center;
@@ -427,6 +437,11 @@ body {
   color: var(--text-muted);
   font-size: 0.8rem;
   width: 18px;
+}
+
+.day-row .day-date {
+  color: var(--text-muted);
+  font-size: 0.85rem;
 }
 
 /* ----- Onboarding modal ----- */
