@@ -177,6 +177,36 @@ body {
   border: 1px solid var(--behind);
 }
 
+.segmented {
+  display: flex;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+.segment {
+  flex: 1;
+  padding: 12px 8px;
+  background: var(--surface-2);
+  border: none;
+  border-right: 1px solid var(--border);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.segment:last-child {
+  border-right: none;
+}
+
+.segment.active {
+  background: var(--accent);
+  color: #fff;
+}
+
 .catchup-row {
   display: flex;
   gap: 12px;

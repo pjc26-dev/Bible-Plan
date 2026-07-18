@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Bible Reading Plan</title>
-<meta name="description" content="Five Day Bible Reading Program tracker — NIV">
+<meta name="description" content="Five Day Bible Reading Program tracker — NIV, ESV, or CSB">
 <meta name="theme-color" content="#3b3226">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
@@ -29,7 +29,7 @@
 
 <header class="app-header">
   <h1>Bible Reading Plan</h1>
-  <p class="subtitle">Five Day Reading Program &middot; NIV</p>
+  <p class="subtitle">Five Day Reading Program &middot; <span id="header-version">NIV</span></p>
 </header>
 
 <main id="view-today" class="view" data-view="today">
@@ -62,6 +62,15 @@
     <button id="reset-progress" class="btn btn-danger">Reset all progress</button>
   </section>
   <section class="card">
+    <h2>Bible Version</h2>
+    <p class="muted">Choose which translation your reading links open on Bible Gateway.</p>
+    <div class="segmented" id="version-picker">
+      <button type="button" class="segment" data-version="NIV">NIV</button>
+      <button type="button" class="segment" data-version="ESV">ESV</button>
+      <button type="button" class="segment" data-version="CSB">CSB</button>
+    </div>
+  </section>
+  <section class="card">
     <h2>Catch up in bulk</h2>
     <p class="muted">Already read further than the app shows? Mark everything up to and including a specific reading as done in one tap.</p>
     <div class="catchup-row">
@@ -82,7 +91,7 @@
   </section>
   <section class="card">
     <h2>About</h2>
-    <p class="muted">Based on the Five Day Bible Reading Program (2026 Edition) from FiveDayBibleReading.com. Readings link out to Bible Gateway for the full NIV text. If you fall behind, the plan never skips ahead &mdash; it always shows your next unread reading so you can catch up at your own pace.</p>
+    <p class="muted">Based on the Five Day Bible Reading Program (2026 Edition) from FiveDayBibleReading.com. Readings link out to Bible Gateway in your chosen translation. If you fall behind, the plan never skips ahead &mdash; it always shows your next unread reading so you can catch up at your own pace.</p>
   </section>
 </main>
 

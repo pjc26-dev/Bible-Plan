@@ -2,6 +2,8 @@
   "use strict";
 
   var STORAGE_KEY = "bible-plan-progress-v1";
+  var VERSION_KEY = "bible-plan-version-v1";
+  var VALID_VERSIONS = ["NIV", "ESV", "CSB"];
   var TOTAL = READINGS.length;
 
   // ---------- storage ----------
@@ -21,6 +23,17 @@
   }
 
   var completed = loadCompleted();
+
+  function loadVersion() {
+    var v = localStorage.getItem(VERSION_KEY);
+    return VALID_VERSIONS.indexOf(v) !== -1 ? v : "NIV";
+  }
+
+  function saveVersion(v) {
+    localStorage.setItem(VERSION_KEY, v);
+  }
+
+  var currentVersion = loadVersion();
 
   function isDone(index) {
     return completed.has(index);
@@ -57,7 +70,7 @@
   function bibleGatewayUrl(passages) {
     var query = passages.join("; ");
     return "https://www.biblegateway.com/passage/?search=" +
-      encodeURIComponent(query) + "&version=NIV";
+      encodeURIComponent(query) + "&version=" + currentVersion;
   }
 
   // ---------- pace calculation ----------
@@ -105,7 +118,7 @@
       html += '<ul class="passage-list">';
       reading.p.forEach(function (passage) {
         html += '<li><a class="passage-link" target="_blank" rel="noopener" href="' +
-          bibleGatewayUrl([passage]) + '">' + passage + '<span class="chev">NIV &rsaquo;</span></a></li>';
+          bibleGatewayUrl([passage]) + '">' + passage + '<span class="chev">' + currentVersion + ' &rsaquo;</span></a></li>';
       });
       html += "</ul>";
       html += '<a class="btn btn-secondary" style="margin-bottom:10px;display:block;" target="_blank" rel="noopener" href="' + url + '">Open all passages together</a>';
@@ -225,6 +238,29 @@
       switchTab("today");
     }
   });
+
+  // ---------- version picker ----------
+
+  var versionPicker = document.getElementById("version-picker");
+  var headerVersionEl = document.getElementById("header-version");
+
+  function syncVersionUI() {
+    versionPicker.querySelectorAll(".segment").forEach(function (btn) {
+      btn.classList.toggle("active", btn.getAttribute("data-version") === currentVersion);
+    });
+    headerVersionEl.textContent = currentVersion;
+  }
+
+  versionPicker.querySelectorAll(".segment").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      currentVersion = btn.getAttribute("data-version");
+      saveVersion(currentVersion);
+      syncVersionUI();
+      renderAll();
+    });
+  });
+
+  syncVersionUI();
 
   function currentPlanWeekAndDay() {
     var start = parseISODate(PLAN_START_DATE);
