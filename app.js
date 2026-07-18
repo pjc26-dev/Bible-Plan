@@ -226,6 +226,50 @@
     }
   });
 
+  function currentPlanWeekAndDay() {
+    var start = parseISODate(PLAN_START_DATE);
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    start.setHours(0, 0, 0, 0);
+    var daysElapsed = Math.floor((today - start) / 86400000);
+    if (daysElapsed < 0) return { week: 1, day: 1 };
+    var week = Math.floor(daysElapsed / 7) + 1;
+    var dow = daysElapsed % 7; // 0 = Monday .. 6 = Sunday
+    var day = Math.min(dow + 1, 5);
+    if (week > 52) week = 52;
+    return { week: week, day: day };
+  }
+
+  var weekSelect = document.getElementById("catchup-week");
+  var daySelect = document.getElementById("catchup-day");
+  var weekOptionsHtml = "";
+  for (var w = 1; w <= 52; w++) {
+    weekOptionsHtml += '<option value="' + w + '">' + w + "</option>";
+  }
+  weekSelect.innerHTML = weekOptionsHtml;
+
+  var planNow = currentPlanWeekAndDay();
+  weekSelect.value = String(planNow.week);
+  daySelect.value = String(planNow.day);
+
+  document.getElementById("catchup-btn").addEventListener("click", function () {
+    var week = parseInt(weekSelect.value, 10);
+    var day = parseInt(daySelect.value, 10);
+    var targetIndex = (week - 1) * 5 + (day - 1);
+    var reading = READINGS[targetIndex];
+    var count = targetIndex + 1;
+
+    if (!confirm(
+      "Mark all " + count + " readings through Week " + week + ", Reading " + day +
+      " (" + reading.p.join("; ") + ") as read?"
+    )) return;
+
+    for (var i = 0; i <= targetIndex; i++) completed.add(i);
+    saveCompleted(completed);
+    renderAll();
+    switchTab("today");
+  });
+
   document.getElementById("jump-to-current").addEventListener("click", function () {
     renderList(true);
   });

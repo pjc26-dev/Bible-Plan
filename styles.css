@@ -177,6 +177,30 @@ body {
   border: 1px solid var(--behind);
 }
 
+.catchup-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.catchup-row label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.catchup-row select {
+  padding: 10px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 1rem;
+}
+
 .btn-done {
   background: var(--done-bg);
   color: var(--done);
