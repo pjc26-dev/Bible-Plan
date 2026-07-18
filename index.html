@@ -16,6 +16,17 @@
 </head>
 <body>
 
+<div id="onboarding-modal" class="modal-overlay" hidden>
+  <div class="modal-card">
+    <span class="modal-emoji">📲</span>
+    <h2>Save your progress &mdash; add this to your Home Screen</h2>
+    <p class="muted">Your checked-off readings live only in this browser. If you keep using it as a regular tab instead of an installed app, your phone can quietly clear that data over time (iPhone Safari is especially aggressive about this after a week or two of inactivity) &mdash; or you could lose it simply by clearing your browsing data. That would wipe out all your progress.</p>
+    <p class="muted">Adding it to your Home Screen keeps it as its own app, so your data stays put.</p>
+    <div id="onboarding-steps" class="onboarding-steps"></div>
+    <button id="onboarding-dismiss" class="btn btn-primary">Got it</button>
+  </div>
+</div>
+
 <header class="app-header">
   <h1>Bible Reading Plan</h1>
   <p class="subtitle">Five Day Reading Program &middot; NIV</p>

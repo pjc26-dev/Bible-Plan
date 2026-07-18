@@ -304,4 +304,61 @@
   }
 
   renderAll();
+
+  // ---------- onboarding: add to home screen ----------
+
+  var ONBOARDING_SEEN_KEY = "bible-plan-onboarding-seen-v1";
+
+  function isRunningStandalone() {
+    return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+      window.navigator.standalone === true;
+  }
+
+  function isIOS() {
+    var ua = navigator.userAgent || "";
+    if (/iPad|iPhone|iPod/.test(ua)) return true;
+    // iPadOS 13+ reports as Mac but has touch support
+    return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+  }
+
+  function isAndroid() {
+    return /Android/.test(navigator.userAgent || "");
+  }
+
+  function onboardingStepsHtml() {
+    if (isIOS()) {
+      return "<ol>" +
+        "<li>Tap the <strong>Share</strong> button (square with an arrow pointing up) in Safari's toolbar</li>" +
+        "<li>Scroll down and tap <strong>Add to Home Screen</strong></li>" +
+        "<li>Tap <strong>Add</strong> in the top right</li>" +
+        "</ol>";
+    }
+    if (isAndroid()) {
+      return "<ol>" +
+        "<li>Tap the <strong>&#8942;</strong> menu in Chrome</li>" +
+        "<li>Tap <strong>Add to Home screen</strong> (or <strong>Install app</strong>)</li>" +
+        "<li>Confirm by tapping <strong>Add</strong> / <strong>Install</strong></li>" +
+        "</ol>";
+    }
+    return "<ol>" +
+      "<li>Open your browser's menu</li>" +
+      "<li>Look for <strong>Add to Home Screen</strong> or <strong>Install app</strong></li>" +
+      "</ol>";
+  }
+
+  function maybeShowOnboarding() {
+    if (isRunningStandalone()) return; // already installed, no need to nag
+    if (localStorage.getItem(ONBOARDING_SEEN_KEY)) return;
+
+    var modal = document.getElementById("onboarding-modal");
+    document.getElementById("onboarding-steps").innerHTML = onboardingStepsHtml();
+    modal.hidden = false;
+
+    document.getElementById("onboarding-dismiss").addEventListener("click", function () {
+      localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
+      modal.hidden = true;
+    });
+  }
+
+  maybeShowOnboarding();
 })();
