@@ -186,16 +186,22 @@ body {
 }
 
 .segment {
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
   flex: 1;
+  min-width: 0;
+  margin: 0;
   padding: 12px 8px;
   background: var(--surface-2);
   border: none;
   border-right: 1px solid var(--border);
+  border-radius: 0;
+  font: inherit;
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-muted);
   cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
 }
 
 .segment:last-child {
@@ -381,6 +387,11 @@ body {
 }
 
 .day-check {
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  margin: 0;
+  font: inherit;
   width: 26px;
   height: 26px;
   flex: 0 0 26px;
