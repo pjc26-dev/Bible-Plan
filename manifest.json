@@ -1,12 +1,12 @@
 {
   "name": "Bible Reading Plan",
   "short_name": "Bible Plan",
-  "description": "Five Day Bible Reading Program tracker (NIV)",
+  "description": "Five Day Bible Reading Program tracker (NIV, ESV, or CSB)",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f6f2ea",
-  "theme_color": "#3b3226",
+  "background_color": "#f7f3ea",
+  "theme_color": "#f7f3ea",
   "icons": [
     { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]

@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Bible Reading Plan</title>
 <meta name="description" content="Five Day Bible Reading Program tracker — NIV, ESV, or CSB">
-<meta name="theme-color" content="#3b3226">
+<meta name="theme-color" content="#f7f3ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14110c" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -18,7 +19,13 @@
 
 <div id="onboarding-modal" class="modal-overlay" hidden>
   <div class="modal-card">
-    <span class="modal-emoji">📲</span>
+    <div class="modal-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="4" width="16" height="16" rx="4"/>
+        <path d="M12 8.5v7"/>
+        <path d="M8.5 12h7"/>
+      </svg>
+    </div>
     <h2>Save your progress &mdash; add this to your Home Screen</h2>
     <p class="muted">Your checked-off readings live only in this browser. If you keep using it as a regular tab instead of an installed app, your phone can quietly clear that data over time (iPhone Safari is especially aggressive about this after a week or two of inactivity) &mdash; or you could lose it simply by clearing your browsing data. That would wipe out all your progress.</p>
     <p class="muted">Adding it to your Home Screen keeps it as its own app, so your data stays put.</p>
@@ -28,86 +35,118 @@
 </div>
 
 <header class="app-header">
-  <h1>Bible Reading Plan</h1>
-  <p class="subtitle">Five Day Reading Program &middot; <span id="header-version">NIV</span></p>
+  <span class="brand-mark">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 5.2c2.3-1 5.1-1 8.2.4v13.2c-3.1-1.4-5.9-1.4-8.2-.4V5.2z"/>
+      <path d="M21 5.2c-2.3-1-5.1-1-8.2.4v13.2c3.1-1.4 5.9-1.4 8.2-.4V5.2z"/>
+    </svg>
+  </span>
+  <span class="header-text">
+    <h1>Bible Reading Plan</h1>
+    <p class="subtitle">Five Day Reading Program &middot; <span id="header-version">NIV</span></p>
+  </span>
 </header>
 
 <main id="view-today" class="view" data-view="today">
-  <section id="today-card" class="card today-card"></section>
+  <section id="today-card" class="card"></section>
   <section id="pace-card" class="card pace-card"></section>
 </main>
 
 <main id="view-progress" class="view" data-view="progress" hidden>
+  <span class="section-label">Overall progress</span>
   <section class="card">
-    <h2>Overall Progress</h2>
-    <div id="progress-summary"></div>
-    <div class="progress-bar-track">
-      <div id="progress-bar-fill" class="progress-bar-fill"></div>
+    <div class="progress-hero">
+      <div class="ring-wrap">
+        <svg class="progress-ring" viewBox="0 0 100 100">
+          <circle class="ring-track" cx="50" cy="50" r="45"/>
+          <circle id="ring-fill" class="ring-fill" cx="50" cy="50" r="45"/>
+        </svg>
+        <div id="ring-value" class="ring-value">0%</div>
+      </div>
+      <div id="progress-count" class="progress-count"></div>
     </div>
     <div id="progress-weeks" class="week-grid"></div>
+    <div class="week-legend">
+      <span class="legend-item"><span class="dot"></span>Upcoming</span>
+      <span class="legend-item"><span class="dot complete"></span>Complete</span>
+    </div>
   </section>
 </main>
 
 <main id="view-list" class="view" data-view="list" hidden>
-  <section class="card list-controls">
-    <button id="jump-to-current" class="btn btn-secondary">Jump to today</button>
-  </section>
-  <section id="week-list"></section>
+  <span class="section-label">Full schedule</span>
+  <button id="jump-to-current" class="btn btn-secondary">Jump to today</button>
+  <section id="week-list" class="card"></section>
 </main>
 
 <main id="view-settings" class="view" data-view="settings" hidden>
+  <span class="section-label">Bible version</span>
   <section class="card">
-    <h2>Settings</h2>
-    <p class="muted">Your progress is stored only on this device (browser local storage). It won't sync between devices.</p>
-    <button id="reset-progress" class="btn btn-danger">Reset all progress</button>
-  </section>
-  <section class="card">
-    <h2>Bible Version</h2>
-    <p class="muted">Choose which translation your reading links open on Bible Gateway.</p>
-    <div class="segmented" id="version-picker">
-      <button type="button" class="segment" data-version="NIV">NIV</button>
-      <button type="button" class="segment" data-version="ESV">ESV</button>
-      <button type="button" class="segment" data-version="CSB">CSB</button>
+    <div class="group-row">
+      <p class="muted">Choose which translation your reading links open on Bible Gateway.</p>
+      <div class="segmented" id="version-picker">
+        <button type="button" class="segment" data-version="NIV">NIV</button>
+        <button type="button" class="segment" data-version="ESV">ESV</button>
+        <button type="button" class="segment" data-version="CSB">CSB</button>
+      </div>
     </div>
   </section>
+
+  <span class="section-label">Catch up in bulk</span>
   <section class="card">
-    <h2>Catch up in bulk</h2>
-    <p class="muted">Already read further than the app shows? Mark everything up to and including a specific reading as done in one tap.</p>
-    <div class="catchup-row">
-      <label>Week
-        <select id="catchup-week"></select>
-      </label>
-      <label>Reading
-        <select id="catchup-day">
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5">5</option>
-        </select>
-      </label>
+    <div class="group-row">
+      <p class="muted">Already read further than the app shows? Mark everything up to and including a specific reading as done in one tap.</p>
+      <div class="catchup-row">
+        <label>Week
+          <select id="catchup-week"></select>
+        </label>
+        <label>Reading
+          <select id="catchup-day">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </label>
+      </div>
+      <p id="catchup-date-preview" class="muted catchup-preview"></p>
+      <button id="catchup-btn" class="btn btn-primary">Mark complete through this reading</button>
     </div>
-    <p id="catchup-date-preview" class="muted catchup-preview"></p>
-    <button id="catchup-btn" class="btn btn-primary">Mark complete through this reading</button>
   </section>
+
+  <span class="section-label">Data</span>
   <section class="card">
-    <h2>About</h2>
-    <p class="muted">Based on the Five Day Bible Reading Program (2026 Edition) from FiveDayBibleReading.com. Readings link out to Bible Gateway in your chosen translation. If you fall behind, the plan never skips ahead &mdash; it always shows your next unread reading so you can catch up at your own pace.</p>
+    <div class="group-row">
+      <p class="muted">Your progress is stored only on this device (browser local storage). It won't sync between devices.</p>
+      <button id="reset-progress" class="btn btn-danger">Reset all progress</button>
+    </div>
+  </section>
+
+  <span class="section-label">About</span>
+  <section class="card">
+    <div class="group-row">
+      <p class="muted">Based on the Five Day Bible Reading Program (2026 Edition) from FiveDayBibleReading.com. Readings link out to Bible Gateway in your chosen translation. If you fall behind, the plan never skips ahead &mdash; it always shows your next unread reading so you can catch up at your own pace.</p>
+    </div>
   </section>
 </main>
 
 <nav class="tab-bar">
   <button class="tab-btn active" data-target="today">
-    <span class="tab-icon">&#128214;</span><span>Today</span>
+    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5.2c2.3-1 5.1-1 8.2.4v13.2c-3.1-1.4-5.9-1.4-8.2-.4V5.2z"/><path d="M21 5.2c-2.3-1-5.1-1-8.2.4v13.2c3.1-1.4 5.9-1.4 8.2-.4V5.2z"/></svg></span>
+    <span>Today</span>
   </button>
   <button class="tab-btn" data-target="progress">
-    <span class="tab-icon">&#128202;</span><span>Progress</span>
+    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11"/><path d="M12 20V4"/><path d="M20 20v-6"/></svg></span>
+    <span>Progress</span>
   </button>
   <button class="tab-btn" data-target="list">
-    <span class="tab-icon">&#128220;</span><span>Full List</span>
+    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11"/><path d="M9 12h11"/><path d="M9 18h11"/><path d="M4 5.2l1.3 1.3L7.6 4"/><path d="M4 11.2l1.3 1.3 2.3-2.5"/><path d="M4 17.2l1.3 1.3 2.3-2.5"/></svg></span>
+    <span>Full List</span>
   </button>
   <button class="tab-btn" data-target="settings">
-    <span class="tab-icon">&#9881;&#65039;</span><span>Settings</span>
+    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6"/><circle cx="11" cy="7" r="2.1"/><path d="M15.2 7H21"/><path d="M3 12h10"/><circle cx="15" cy="12" r="2.1"/><path d="M19.2 12H21"/><path d="M3 17h6"/><circle cx="11" cy="17" r="2.1"/><path d="M15.2 17H21"/></svg></span>
+    <span>Settings</span>
   </button>
 </nav>
 

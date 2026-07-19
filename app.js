@@ -6,6 +6,10 @@
   var VALID_VERSIONS = ["NIV", "ESV", "CSB"];
   var TOTAL = READINGS.length;
 
+  var ICON_CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
+  var ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+  var ICON_CELEBRATE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9"/></svg>';
+
   // ---------- storage ----------
 
   function loadCompleted() {
@@ -124,7 +128,7 @@
     if (idx === -1) {
       card.innerHTML =
         '<div class="all-caught-up">' +
-        '<span class="big-emoji">&#127881;</span>' +
+        '<div class="celebrate-icon">' + ICON_CELEBRATE + "</div>" +
         "<h2>You've finished the whole plan!</h2>" +
         '<p class="muted">All 260 readings are marked complete. Visit Settings to reset if you\'d like to start again.</p>' +
         "</div>";
@@ -132,17 +136,20 @@
       var reading = READINGS[idx];
       var url = bibleGatewayUrl(reading.p);
       var html = "";
-      html += '<div class="eyebrow">Week ' + reading.w + " &middot; Reading " + reading.d + " of 5 (" +
-        formatShortDate(dateForWeekDay(reading.w, reading.d)) + ")</div>";
-      html += "<h2>Today's Reading</h2>";
+      html += '<div class="today-hero">';
+      html += '<div class="eyebrow">Week ' + reading.w + " &middot; Reading " + reading.d + " of 5</div>";
+      html += '<div class="hero-date">' + formatShortDate(dateForWeekDay(reading.w, reading.d)) + "</div>";
+      html += "</div>";
       html += '<ul class="passage-list">';
       reading.p.forEach(function (passage) {
         html += '<li><a class="passage-link" target="_blank" rel="noopener" href="' +
-          bibleGatewayUrl([passage]) + '">' + passage + '<span class="chev">' + currentVersion + ' &rsaquo;</span></a></li>';
+          bibleGatewayUrl([passage]) + '">' + passage + '<span class="chev">' + ICON_CHEVRON + "</span></a></li>";
       });
       html += "</ul>";
-      html += '<a class="btn btn-secondary" style="margin-bottom:10px;display:block;" target="_blank" rel="noopener" href="' + url + '">Open all passages together</a>';
+      html += '<div class="today-actions">';
+      html += '<a class="btn btn-secondary" target="_blank" rel="noopener" href="' + url + '">Open all passages together (' + currentVersion + ")</a>";
       html += '<button class="btn btn-primary" id="mark-done-btn">Mark as read</button>';
+      html += "</div>";
       card.innerHTML = html;
 
       document.getElementById("mark-done-btn").addEventListener("click", function () {
@@ -175,15 +182,19 @@
 
   // ---------- rendering: Progress ----------
 
+  var RING_RADIUS = 45;
+  var RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
   function renderProgress() {
     var actual = completedCount();
     var pct = Math.round((actual / TOTAL) * 100);
 
-    document.getElementById("progress-summary").innerHTML =
-      "<div><strong>" + actual + " / " + TOTAL + "</strong>readings completed</div>" +
-      "<div><strong>" + pct + "%</strong>of the plan</div>";
+    document.getElementById("ring-value").textContent = pct + "%";
+    document.getElementById("progress-count").textContent = actual + " of " + TOTAL + " readings";
 
-    document.getElementById("progress-bar-fill").style.width = pct + "%";
+    var ringFill = document.getElementById("ring-fill");
+    ringFill.style.strokeDasharray = RING_CIRCUMFERENCE.toFixed(2);
+    ringFill.style.strokeDashoffset = (RING_CIRCUMFERENCE * (1 - pct / 100)).toFixed(2);
 
     var idx = nextUnreadIndex();
     var currentWeek = idx === -1 ? 52 : READINGS[idx].w;
@@ -196,7 +207,7 @@
       if (wp.done === wp.total) cls += " complete";
       if (w === currentWeek) cls += " current";
       var range = formatShortDate(dateForWeekDay(w, 1)) + "–" + formatShortDate(dateForWeekDay(w, 5));
-      html += '<div class="' + cls + '" title="Week ' + w + ": " + wp.done + "/" + wp.total + " (" + range + ')">' + w + "</div>";
+      html += '<div class="' + cls + '" title="Week ' + w + ": " + wp.done + "/" + wp.total + " (" + range + ')"></div>';
     }
     grid.innerHTML = html;
   }
@@ -221,14 +232,15 @@
       var openAttr = (w === currentWeek) ? " open" : "";
       var range = formatShortDate(dateForWeekDay(w, 1)) + "–" + formatShortDate(dateForWeekDay(w, 5));
       html += '<details class="week-block" id="week-' + w + '"' + openAttr + '>';
-      html += "<summary><span>Week " + w + ' <span class="week-date">(' + range + ')</span></span><span class="week-progress">' + wp.done + "/" + wp.total + "</span></summary>";
+      html += '<summary><span class="chevron">' + ICON_CHEVRON + '</span><span class="summary-meta">Week ' + w +
+        ' <span class="week-date">(' + range + ')</span></span><span class="week-progress">' + wp.done + "/" + wp.total + "</span></summary>";
       items.forEach(function (r) {
         var done = isDone(r.index);
         var text = r.p.join("; ");
         var dateStr = formatShortDate(dateForWeekDay(r.w, r.d));
         html += '<div class="day-row' + (done ? " done" : "") + '" data-index="' + r.index + '">';
         html += '<span class="day-num">' + r.d + "</span>";
-        html += '<button class="day-check" data-index="' + r.index + '">&#10003;</button>';
+        html += '<button class="day-check" data-index="' + r.index + '">' + ICON_CHECK + "</button>";
         html += '<a class="day-text" target="_blank" rel="noopener" href="' + bibleGatewayUrl(r.p) + '">' + text +
           ' <span class="day-date">(' + dateStr + ')</span></a>';
         html += "</div>";
