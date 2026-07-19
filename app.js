@@ -138,7 +138,7 @@
       var html = "";
       html += '<div class="today-hero">';
       html += '<div class="eyebrow">Week ' + reading.w + " &middot; Reading " + reading.d + " of 5</div>";
-      html += '<div class="hero-date">' + formatShortDate(dateForWeekDay(reading.w, reading.d)) + "</div>";
+      html += '<div class="hero-date">' + formatLongDate(dateForWeekDay(reading.w, reading.d)) + "</div>";
       html += "</div>";
       html += '<ul class="passage-list">';
       reading.p.forEach(function (passage) {
