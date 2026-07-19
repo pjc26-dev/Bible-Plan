@@ -26,6 +26,34 @@ function formatShortDate(d) {
   return MONTH_NAMES[d.getMonth()] + " " + d.getDate();
 }
 
+const BOOK_ABBR = {
+  "Genesis": "Gen", "Exodus": "Ex", "Leviticus": "Lev", "Numbers": "Num", "Deuteronomy": "Deut",
+  "Joshua": "Josh", "Judges": "Judg", "Ruth": "Ruth", "1 Samuel": "1 Sam", "2 Samuel": "2 Sam",
+  "1 Kings": "1 Kin", "2 Kings": "2 Kin", "1 Chronicles": "1 Chr", "2 Chronicles": "2 Chr",
+  "Ezra": "Ezra", "Nehemiah": "Neh", "Esther": "Esth", "Job": "Job", "Psalm": "Ps",
+  "Proverbs": "Prov", "Ecclesiastes": "Eccl", "Song of Solomon": "Song", "Isaiah": "Isa",
+  "Jeremiah": "Jer", "Lamentations": "Lam", "Ezekiel": "Ezek", "Daniel": "Dan", "Hosea": "Hos",
+  "Joel": "Joel", "Amos": "Amos", "Obadiah": "Obad", "Jonah": "Jonah", "Micah": "Mic",
+  "Nahum": "Nah", "Habakkuk": "Hab", "Zephaniah": "Zeph", "Haggai": "Hag", "Zechariah": "Zech",
+  "Malachi": "Mal", "Matthew": "Matt", "Mark": "Mark", "Luke": "Luke", "John": "John",
+  "Acts": "Acts", "Romans": "Rom", "1 Corinthians": "1 Cor", "2 Corinthians": "2 Cor",
+  "Galatians": "Gal", "Ephesians": "Eph", "Philippians": "Phil", "Colossians": "Col",
+  "1 Thessalonians": "1 Thess", "2 Thessalonians": "2 Thess", "1 Timothy": "1 Tim",
+  "2 Timothy": "2 Tim", "Titus": "Titus", "Philemon": "Phlm", "Hebrews": "Heb",
+  "James": "Jas", "1 Peter": "1 Pet", "2 Peter": "2 Pet", "1 John": "1 John", "2 John": "2 John",
+  "3 John": "3 John", "Jude": "Jude", "Revelation": "Rev"
+};
+const BOOK_NAMES_BY_LENGTH = Object.keys(BOOK_ABBR).sort((a, b) => b.length - a.length);
+
+function shortenPassage(p) {
+  for (const name of BOOK_NAMES_BY_LENGTH) {
+    if (p === name || p.startsWith(name + " ")) {
+      return BOOK_ABBR[name] + p.slice(name.length);
+    }
+  }
+  return p;
+}
+
 function planWeekAndDay(startDate) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -33,12 +61,16 @@ function planWeekAndDay(startDate) {
   start.setHours(0, 0, 0, 0);
   let daysElapsed = Math.floor((today - start) / 86400000);
   if (daysElapsed < 0) daysElapsed = 0;
-  let week = Math.floor(daysElapsed / 7) + 1;
-  if (week > 52) week = 52;
   const dow = daysElapsed % 7; // 0 = Mon .. 6 = Sun
   const isWeekend = dow >= 5;
-  const day = Math.min(dow + 1, 5);
-  return { week, day, isWeekend };
+
+  // On weekends, point at the coming Monday's reading instead of capping at Friday.
+  const targetDaysElapsed = isWeekend ? daysElapsed + (7 - dow) : daysElapsed;
+  let week = Math.floor(targetDaysElapsed / 7) + 1;
+  if (week > 52) week = 52;
+  const targetDow = targetDaysElapsed % 7;
+  const day = Math.min(targetDow + 1, 5);
+  return { week, day, isWeekend, daysElapsed: targetDaysElapsed };
 }
 
 async function loadPlanData() {
@@ -74,7 +106,7 @@ function buildWidget(state) {
   const maxLines = family === "small" ? 3 : family === "medium" ? 4 : 8;
   const shown = state.passages.slice(0, maxLines);
   shown.forEach((p) => {
-    const line = widget.addText("• " + p);
+    const line = widget.addText("• " + shortenPassage(p));
     line.font = Font.systemFont(family === "small" ? 12 : 14);
     line.textColor = new Color(COLORS.text);
     line.minimumScaleFactor = 0.7;
@@ -98,29 +130,18 @@ async function run() {
   let widget;
   try {
     const { startDate, readings } = await loadPlanData();
-    const { week, day, isWeekend } = planWeekAndDay(startDate);
+    const { week, day, isWeekend, daysElapsed } = planWeekAndDay(startDate);
 
-    if (isWeekend) {
-      const weekReadings = readings.filter((r) => r.w === week);
-      const allPassages = [].concat(...weekReadings.map((r) => r.p));
-      widget = buildWidget({
-        eyebrow: "Weekend catch-up",
-        heading: "Week " + week,
-        passages: allPassages,
-        footer: "Catch up on anything you missed this week"
-      });
-    } else {
-      const reading = readings.find((r) => r.w === week && r.d === day);
-      const dateOffset = (week - 1) * 7 + (day - 1);
-      const readingDate = new Date(startDate);
-      readingDate.setDate(readingDate.getDate() + dateOffset);
-      widget = buildWidget({
-        eyebrow: "Week " + week + " · Reading " + day + " of 5",
-        heading: formatShortDate(readingDate),
-        passages: reading ? reading.p : [],
-        footer: "Tap to open Bible Plan"
-      });
-    }
+    const reading = readings.find((r) => r.w === week && r.d === day);
+    const readingDate = new Date(startDate);
+    readingDate.setDate(readingDate.getDate() + daysElapsed);
+
+    widget = buildWidget({
+      eyebrow: (isWeekend ? "Up next · " : "") + "Week " + week + " · Reading " + day + " of 5",
+      heading: formatShortDate(readingDate),
+      passages: reading ? reading.p : [],
+      footer: isWeekend ? "Next reading — tap to open Bible Plan" : "Tap to open Bible Plan"
+    });
   } catch (e) {
     widget = new ListWidget();
     widget.backgroundColor = new Color(COLORS.bg);
