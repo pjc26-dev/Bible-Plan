@@ -115,10 +115,20 @@
     </div>
   </section>
 
+  <span class="section-label">Morning paper</span>
+  <section class="card">
+    <div class="group-row">
+      <p class="muted">Send your progress to the morning paper so it prints the reading you're actually up to. Paste the key that can only update the <em>bibleprogress</em> repo. It stays on this device.</p>
+      <input id="sync-token" class="text-input" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…">
+      <button id="sync-save" class="btn btn-primary">Save and sync now</button>
+      <p id="sync-status" class="muted sync-status"></p>
+    </div>
+  </section>
+
   <span class="section-label">Data</span>
   <section class="card">
     <div class="group-row">
-      <p class="muted">Your progress is stored only on this device (browser local storage). It won't sync between devices.</p>
+      <p class="muted">Your progress is stored on this device (browser local storage). It won't sync between devices.</p>
       <button id="reset-progress" class="btn btn-danger">Reset all progress</button>
     </div>
   </section>

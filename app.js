@@ -24,6 +24,7 @@
 
   function saveCompleted(set) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(set)));
+    scheduleSync();
   }
 
   var completed = loadCompleted();
@@ -35,6 +36,7 @@
 
   function saveVersion(v) {
     localStorage.setItem(VERSION_KEY, v);
+    scheduleSync();
   }
 
   var currentVersion = loadVersion();
@@ -388,6 +390,95 @@
   }
 
   renderAll();
+
+  // ---------- morning paper sync ----------
+  // Writes progress.json to the bibleprogress repo so the morning paper
+  // (pjc26-dev/Randomstuff) can print the next unread reading. The token is
+  // a fine-grained one that can only write to that repo.
+
+  var SYNC_TOKEN_KEY = "bible-plan-sync-token-v1";
+  var SYNC_LAST_KEY = "bible-plan-sync-last-v1";
+  var SYNC_URL = "https://api.github.com/repos/pjc26-dev/bibleprogress/contents/progress.json";
+  var syncTimer = null;
+  var syncTokenInput = document.getElementById("sync-token");
+  var syncStatusEl = document.getElementById("sync-status");
+
+  function syncToken() {
+    return localStorage.getItem(SYNC_TOKEN_KEY) || "";
+  }
+
+  function syncPayload() {
+    return JSON.stringify({
+      completed: Array.from(completed).sort(function (a, b) { return a - b; }),
+      version: currentVersion
+    });
+  }
+
+  function setSyncStatus(text) {
+    syncStatusEl.textContent = text;
+  }
+
+  function scheduleSync() {
+    if (!syncToken()) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(syncProgress, 1500);
+  }
+
+  function githubRequest(method, body) {
+    return fetch(SYNC_URL, {
+      method: method,
+      cache: "no-store",
+      headers: {
+        "Authorization": "Bearer " + syncToken(),
+        "Accept": "application/vnd.github+json"
+      },
+      body: body ? JSON.stringify(body) : undefined
+    });
+  }
+
+  function syncProgress(force) {
+    var payload = syncPayload();
+    if (!syncToken() || (!force && payload === localStorage.getItem(SYNC_LAST_KEY))) {
+      return Promise.resolve();
+    }
+    var data = JSON.parse(payload);
+    data.updated = new Date().toISOString();
+    setSyncStatus("Syncing…");
+    return githubRequest("GET").then(function (res) {
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error(res.status);
+      return res.json().then(function (file) { return file.sha; });
+    }).then(function (sha) {
+      var body = {
+        message: "Progress: " + data.completed.length + " readings done",
+        content: btoa(JSON.stringify(data, null, 1))
+      };
+      if (sha) body.sha = sha;
+      return githubRequest("PUT", body);
+    }).then(function (res) {
+      if (!res.ok) throw new Error(res.status);
+      localStorage.setItem(SYNC_LAST_KEY, payload);
+      setSyncStatus("Synced " + new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) +
+        " · " + data.completed.length + (data.completed.length === 1 ? " reading" : " readings") + " done");
+    }).catch(function (e) {
+      var code = String(e.message);
+      setSyncStatus(code === "401" || code === "403" || code === "404"
+        ? "Sync failed: the key was rejected (" + code + "). Check it can write to bibleprogress."
+        : "Couldn't sync right now. It'll try again next time you open the app.");
+    });
+  }
+
+  syncTokenInput.value = syncToken();
+  document.getElementById("sync-save").addEventListener("click", function () {
+    var token = syncTokenInput.value.trim();
+    if (token) localStorage.setItem(SYNC_TOKEN_KEY, token);
+    else localStorage.removeItem(SYNC_TOKEN_KEY);
+    if (!token) { setSyncStatus("Sync turned off."); return; }
+    syncProgress(true);
+  });
+
+  // Catch up on anything that couldn't sync last time (e.g. offline).
+  syncProgress(false);
 
   // ---------- onboarding: add to home screen ----------
 

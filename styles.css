@@ -414,6 +414,22 @@ h1, h2, h3, p { margin: 0; }
 .group-row > .muted { margin-bottom: var(--sp-3); }
 .group-row > .muted:last-child { margin-bottom: 0; }
 
+/* 16px stops iOS Safari zooming in when the field is focused. */
+.text-input {
+  width: 100%;
+  font: inherit;
+  font-size: 16px;
+  padding: var(--sp-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+#sync-save { margin-top: var(--sp-3); }
+.group-row > .sync-status { margin-top: var(--sp-3); }
+.sync-status:empty { display: none; }
+
 .field-row {
   display: flex;
   align-items: center;
